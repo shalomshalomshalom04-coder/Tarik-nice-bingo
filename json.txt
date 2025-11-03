@@ -1,0 +1,21 @@
+{
+  "name": "Tarik Nice Bingo",
+  "short_name": "Bingo",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#181818",
+  "theme_color": "#fdbb2d",
+  "description": "A fun multiplayer bingo game.",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

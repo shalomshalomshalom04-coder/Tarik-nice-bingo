@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TARIK NICE BINGO - Responsive Multiplayer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- PWA Manifest Link -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- CryptoJS for Encryption -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <!-- QR Code Generator Library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+  <style>
+    :root {
+      --primary-dark: #141414;
+      --secondary-dark: #181818;
+      --card-dark: #222;
+      --text-light: #fff;
+      --accent-yellow: #fdbb2d;
+      --accent-red: #f44336;
+      --accent-green: #2ecc71;
+      --accent-blue: #3498db;
+      --accent-purple: #9b59b6;
+      --cell-bg: #2a2046;
+      --border-color: #333;
+    }
+    body {
+      background: var(--primary-dark) url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80') center center/cover no-repeat;
+      background-blend-mode: multiply;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: flex-start; /* Align to top */
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      color: var(--text-light);
+      padding: 20px 0;
+    }
+    .main-container, .login-container {
+      background: var(--secondary-dark);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px #000a;
+      padding: 20px;
+      width: 100%;
+      max-width: 95%;
+      text-align: center;
+      border: 1.5px solid #222;
+      margin: 20px;
+      position: relative;
+    }
+    .login-container {
+        max-width: 450px;
+        margin-top: 5rem;
+    }
+     .bingo-logo {
+        font-family: 'Impact', 'Arial Black', sans-serif;
+        color: var(--accent-red);
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+        text-shadow: 1px 1px 0 var(--text-light);
+        line-height: 1.1;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-weight: bold;
+        cursor: pointer; /* Ensure the logo is clickable */
+    }
+    .form-label {
+      color: var(--accent-yellow);
+      font-weight: bold;
+      margin-bottom: 2px;
+      text-align: left;
+      display: block;
+      font-size: 1em;
+    }
+    .form-control {
+      background: var(--secondary-dark);
+      border: none;
+      border-bottom: 2px solid #444;
+      color: var(--text-light);
+      border-radius: 0;
+      margin-bottom: 20px;
+      font-size: 1.07rem;
+      width: 100%;
+      padding: 8px 2px 6px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-bottom: 2px solid var(--accent-red);
+      background: var(--secondary-dark);
+      color: var(--text-light);
+      box-shadow: none;
+    }
+    .btn {
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      width: 100%;
+      margin-bottom: 12px;
+      border: none;
+      padding: 11px 0;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .btn-login { background: var(--accent-red); color: var(--text-light); }
+    .btn-create { background: transparent; color: var(--text-light); border: 1.5px solid var(--accent-yellow); }
+    .forgot-link { color: var(--accent-yellow); font-size: 1rem; text-decoration: none; display: block; margin-top: 10px; }
+    .forgot-link:hover { text-decoration: underline; }
+    .error-msg, .success-msg { font-size: 0.98em; min-height: 20px; margin-bottom: 10px; text-align: left; font-weight: bold; }
+    .error-msg { color: #ff5555; }
+    .success-msg { color: var(--accent-green); }
+/* New Layout Styles */
+.game-layout-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.left-panel, .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+}
+.panel-section {
+    background-color: var(--card-dark);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.panel-section-header {
+    color: var(--accent-yellow);
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+.game-status-display {
+  text-align: left;
+}
+.game-status-display > div {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+.game-status-display .label {
+  color: var(--text-light);
+  font-weight: bold;
+}
+.game-status-display .value {
+  color: var(--accent-green);
+  font-weight: bold;
+  margin-left: 8px;
+}
+.game-status-display .value.pot {
+  color: var(--accent-yellow);
+}
+.game-progress-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  text-align: center;
+}
+.progress-item .label {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.progress-item .value {
+  background-color: var(--primary-dark);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#currentBallDisplay .value {
+  color: var(--accent-yellow);
+  font-size: 6rem; /* MODIFIED: Increased font size */
+}
+ #recentlyCalledDisplay .value {
+    font-size: 1rem;
+    flex-wrap: wrap;
+    gap: 5px;
+ }
+ #recentlyCalledDisplay .recent-ball {
+    background-color: #444;
+    color: var(--text-light);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+ }
+@media (min-width: 992px) {
+    .main-container {
+        max-width: 1400px;
+    }
+    .game-layout-container {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 20px;
+        align-items: flex-start;
+    }
+}
+.logout-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 0.9rem;
+    font-weight: bold;
+    width: auto !important;
+    margin: 0 !important;
+}
+.board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); gap: 5px; user-select: none; transition: opacity 0.3s; }
+.board-grid.locked { opacity: 0.6; pointer-events: none; }
+.board-cell { background: #fff; color: #222; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; aspect-ratio: 1/1; transition: all 0.2s; border: 2px solid var(--cell-bg); }
+.board-cell.selected { background: var(--accent-yellow); color: var(--cell-bg); border-color: var(--accent-yellow); }
+.registered-cards-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; padding: 5px; background: var(--cell-bg); border-radius: 8px; margin-top: 10px; }
+.registered-card { background: var(--accent-blue); color: var(--text-light); border-radius: 8px; padding: 4px 10px; font-size: 14px; font-weight: bold; cursor: pointer; }
+.called-numbers-container { display: grid; grid-template-columns: repeat(15, 1fr); gap: 5px; padding: 8px; background: var(--primary-dark); border-radius: 8px; }
+.called-number { background: #444; color: #888; font-size: 1.2rem; /* MODIFIED: Increased font size */ font-weight: bold; border-radius: 4px; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+.called-number.active { background: var(--accent-green); color: white; transform: scale(1.1); }
+#playerCardContainer { background: var(--card-dark); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid var(--accent-yellow); }
+#playerCardContainer h5 { color: var(--accent-yellow); margin: 0; padding-bottom: 10px; }
+#playerCardGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+#playerCardGrid div { background: var(--cell-bg); border-radius: 6px; height: 45px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--accent-yellow); border: 1px solid #444; transition: all 0.3s ease; }
+#playerCardGrid .free-cell { background: var(--accent-red); color: white; }
+#playerCardGrid .highlight-line { background: var(--accent-green) !important; color: white !important; font-weight: bold; transform: scale(1.1); box-shadow: 0 0 15px var(--accent-green); }
+#winnerIdDisplay { margin-top: 10px; font-weight: bold; color: var(--accent-red); font-size: 1.1rem; min-height: 25px; }
+/* MODIFIED: Player Cards Grid (5x10) */
+.outside-players-container { display: grid; grid-template-columns: repeat(5, 1fr); /* MODIFIED: Enforced 5 columns */ gap: 12px; padding: 10px; background: #111; border-radius: 8px; max-height: 70vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--accent-yellow) transparent; }
+.bingo-card-outside { background: white; color: black; border-radius: 10px; padding: 6px; width: auto; border: 2px solid var(--accent-red); box-shadow: 3px 3px 5px rgba(0,0,0,0.3); }
+.card-header-info { display: flex; align-items: center; gap: 6px; background-color: var(--accent-red); padding: 4px 8px; border-radius: 6px; margin-bottom: 6px; color: white; }
+.card-logo { background-color: white; color: var(--accent-red); font-weight: bold; font-family: 'Impact', sans-serif; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.card-title-text { font-weight: bold; font-size: 12px; flex-grow: 1; text-align: left; white-space: nowrap; }
+.card-id-barcode-wrapper { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.id-label { font-size: 13px; font-weight: bold; flex-shrink: 0; white-space: nowrap; }
+.barcode-element { background: linear-gradient(to right, black 0%, black 5%, transparent 5%, transparent 7%, black 7%, black 12%, transparent 12%, transparent 15%, black 15%, black 22%, transparent 22%, transparent 23%, black 23%, black 28%, transparent 28%, transparent 32%, black 32%, black 34%, transparent 34%, transparent 35%, black 35%, black 40%, transparent 40%, transparent 43%, black 43%, black 45%, transparent 45%, transparent 48%, black 48%, black 55%, transparent 55%, transparent 56%, black 56%, black 60%, transparent 60%, transparent 63%, black 63%, black 68%, transparent 68%, transparent 70%, black 70%, black 72%, transparent 72%, transparent 74%, black 74%, black 80%, transparent 80%, transparent 81%, black 81%, black 85%, transparent 85%, transparent 88%, black 88%, black 92%, transparent 92%, transparent 95%, black 95%, black 100% ); width: 40px; height: 15px; }
+.bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.bingo-grid .header-cell { text-align: center; font-size: 1.6rem; color: black; font-weight: bold; font-family: 'Impact', sans-serif; }
+.bingo-grid .number-box { background: var(--accent-yellow); color: #111; font-weight: bold; font-size: 1.4rem; border-radius: 5px; display: flex; justify-content: center; align-items: center; aspect-ratio: 1/1; box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4), inset 1px 1px 1px rgba(255, 255, 255, 0.5); text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.4); transition: all 0.2s ease; }
+.bingo-grid .number-box.free-cell { background: var(--accent-red); color: white; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+.bingo-grid .number-box.marked { background: var(--accent-green) !important; color: white !important; box-shadow: 0 0 10px var(--accent-green); transform: scale(1.05); }
+#gameStateMessage { font-weight: bold; min-height: 24px; margin: 10px 0; color: var(--accent-yellow); text-align: center; }
+.bet-amount-row {display: flex; gap: 8px; margin-bottom: 10px;}
+.bet-amount-row button { flex-grow: 1; }
+.bet-amount-row button.selected { background: var(--accent-red); color: white; box-shadow: 0 0 10px var(--accent-red); }
+.speed-control-container { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; }
+.speed-control-box { background-color: var(--cell-bg); border: 1px solid var(--accent-yellow); color: var(--accent-yellow); padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; flex-grow: 1; font-size: 0.9rem; text-align: center;}
+.speed-control-box.selected { background-color: var(--accent-yellow); color: var(--cell-bg); font-weight: bold; }
+.verification-section .d-flex {gap: 10px;}
+.verification-section .form-control {margin:0 !important;}
+.verification-section button { width: auto; flex-shrink: 0; padding: 8px 15px; margin: 0 !important; font-size: 1rem; }
+.owner-panel { background: #111; border: 1px solid var(--accent-yellow); border-radius: 8px; padding: 1rem; text-align: left; }
+.owner-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: var(--accent-yellow); }
+.owner-panel-header h4 { margin: 0; }
+#usersList { max-height: 200px; overflow-y: auto; padding: 0.5rem; background: var(--secondary-dark); border-radius: 4px; border: 1px solid #444; }
+#generatedPackageOutput { background-color: #111; border: 1px solid var(--accent-yellow); color: var(--text-light); padding: 10px; border-radius: 4px; font-family: monospace; word-wrap: break-word; min-height: 50px; user-select: all; }
+.user-card { background: var(--cell-bg); border-radius: 8px; padding: 1rem; border: 1px solid var(--accent-yellow); text-align: left; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.user-card .btn { width: auto; font-size: 0.8rem; padding: 4px 10px; margin: 0 0 0 5px; }
+.user-management-controls { display: flex; gap: 0.5rem; align-items: center; }
+.user-management-controls .form-control { margin: 0; width: 80px; padding: 5px; font-size: 0.9rem; }
+.subscription-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; margin-top: 4px; display: inline-block; }
+.subscription-badge.daily { background-color: var(--accent-blue); color: white; }
+.subscription-badge.weekly { background-color: var(--accent-purple); color: white; }
+.bingo-btn { border: none; border-radius: 7px; font-weight: bold; font-size: 1rem; padding: 8px 12px; cursor: pointer; width: 100%; }
+.bingo-btn-yellow { background: var(--accent-yellow); color: var(--cell-bg); }
+.bingo-btn-green { background: var(--accent-green); color: var(--text-light); }
+.bingo-btn-red { background: var(--accent-red); color: var(--text-light); }
+.bingo-btn-blue { background: var(--accent-blue); color: var(--text-light); }
+.bingo-btn-purple { background: var(--accent-purple); color: var(--text-light); }
+.activation-section .d-flex { gap: 10px; }
+.activation-section .form-control { margin-bottom: 0 !important; }
+.activation-section button { width: auto; flex-shrink: 0; padding: 8px 15px; margin-bottom: 0 !important; }
+.modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; }
+.modal-content { background-color: var(--secondary-dark); padding: 25px; border-radius: 12px; border: 1px solid var(--accent-yellow); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; text-align: left; }
+.modal-header { color: var(--accent-yellow); font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #444; }
+.modal-footer { text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid #444; }
+#qrCodeContainer { display: flex; justify-content: center; align-items: center; padding: 1rem; background: white; border-radius: 8px; margin-top: 1rem; }
+#winnerHighlightSection {
+    display: none;
+    border: 2px solid var(--accent-green);
+    box-shadow: 0 0 25px var(--accent-green);
+    margin-bottom: 20px;
+}
+#winnerHighlightHeader {
+    color: var(--accent-green);
+    text-align: center;
+    font-size: 1.7rem;
+    font-family: 'Impact', sans-serif;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+#winnerHighlightInfo {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    text-align: center;
+}
+#winnerCardGrid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 350px;
+    margin: auto;
+}
+#winnerCardGrid > div {
+    background: var(--cell-bg);
+    border-radius: 8px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--accent-yellow);
+    border: 1px solid #555;
+    transition: all 0.3s ease;
+}
+#winnerCardGrid .free-cell {
+    background: var(--accent-red);
+    color: white;
+}
+#winnerCardGrid .highlight-line {
+    background: var(--accent-green) !important;
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--accent-green);
+}
+#audio-preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+#audio-preloader .spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid var(--accent-yellow);
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+#ownerSection {
+    display: none;
+}
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body > :not(#printableArea) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  #printableArea {
+    visibility: visible !important;
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+  }
+  .printable-cards-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important; /* 2 cards per row */
+    gap: 20px;
+    padding: 10mm;
+  }
+  .bingo-card-outside {
+    box-shadow: none !important;
+    page-break-inside: avoid !important; /* Prevents cards from splitting across pages */
+  }
+}
+</style>
+</head>
+<body>
+  <div id="mainApp"></div>
+  <div id="modalContainer"></div>
+  <div id="printableArea" style="display:none;"></div>
+  <div id="audio-preloader" style="display: none;">
+    <div class="spinner"></div>
+    <div id="loading-message">Loading Audio Files...</div>
+    <div id="loading-progress" style="font-size: 1rem; margin-top: 10px;">(0%)</div>
+  </div>
+
+<script>
+if ('deviceMemory' in navigator && navigator.deviceMemory <= 2) {
+  document.body.innerHTML = '<div class="main-container" style="text-align: center; padding: 50px;"><h1 style="color: var(--accent-red);">Device Not Supported</h1><p style="font-size: 1.2rem;">Your device has low RAM (' + navigator.deviceMemory + ' GB) or storage. This game requires at least 3GB RAM and 32GB storage to run properly.</p><p>Please use a higher-end device.</p></div>';
+  throw new Error('Low-end device detected. Game execution stopped.');
+}
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE AND CONFIGURATION ---
+    const mainApp = document.getElementById('mainApp');
+    const modalContainer = document.getElementById('modalContainer');
+    const OWNER_SALT = "a_very_secret_bingo_salt_#2025";
+    const DEFAULT_OWNER_PASSWORD_HASH = "e21b777a87385973e659a8508922c159850c9b4e754a6190f89839352E008f37";
+    const MASTER_RESET_KEY_USER = "qera_tarik_1993";
+    const MASTER_RESET_KEY_PASS = "key_new_1986";
+    const SECRET_KEY = "YourSuperSecretKeyForBingoPackages2025";
+    const deductionMap = {10: 2, 20: 4, 30: 8, 50: 10};
+    const predefinedCards = {
+    1: [[15, 22, 37, 56, 65], [2, 27, 41, 52, 68], [7, 17, 'FREE', 57, 67], [14, 18, 36, 59, 73], [11, 24, 38, 58, 63]],
+    2: [[11, 26, 43, 59, 75], [12, 22, 39, 51, 62], [6, 18, 'FREE', 56, 65], [13, 28, 33, 52, 66], [8, 23, 40, 47, 71]],
+    3: [[13, 17, 44, 55, 75], [5, 18, 35, 50, 64], [6, 16, 'FREE', 54, 68], [9, 27, 45, 51, 70], [10, 19, 34, 57, 61]],
+    4: [[6, 20, 38, 51, 66], [13, 25, 43, 56, 69], [7, 23, 'FREE', 48, 74], [3, 16, 32, 47, 68], [12, 19, 31, 52, 62]],
+    5: [[14, 30, 31, 57, 61], [2, 29, 41, 60, 62], [11, 17, 'FREE', 54, 66], [15, 25, 38, 46, 63], [6, 20, 37, 52, 74]],
+    6: [[15, 18, 39, 47, 73], [10, 29, 42, 48, 61], [6, 27, 'FREE', 54, 72], [9, 25, 36, 49, 63], [7, 23, 44, 57, 67]],
+    7: [[1, 20, 37, 55, 74], [2, 21, 34, 49, 66], [3, 28, 'FREE', 56, 63], [5, 24, 41, 59, 65], [8, 16, 44, 47, 67]],
+    8: [[5, 28, 32, 60, 64], [1, 23, 33, 58, 74], [11, 18, 'FREE', 56, 72], [14, 16, 42, 49, 71], [3, 26, 36, 51, 61]],
+    9: [[5, 20, 35, 53, 73], [7, 28, 43, 59, 74], [1, 17, 'FREE', 56, 66], [9, 27, 32, 51, 70], [15, 26, 31, 60, 69]],
+    10: [[2, 20, 41, 48, 75], [6, 29, 39, 46, 68], [7, 27, 'FREE', 55, 63], [10, 21, 36, 60, 61], [1, 25, 37, 49, 67]],
+    11: [[5, 20, 31, 51, 61], [8, 16, 33, 56, 62], [15, 26, 'FREE', 54, 71], [14, 17, 37, 55, 75], [1, 23, 36, 50, 64]],
+    12: [[15, 23, 41, 60, 63], [13, 18, 31, 52, 72], [6, 28, 'FREE', 54, 67], [7, 24, 39, 49, 68], [1, 30, 33, 53, 70]],
+    13: [[7, 27, 41, 48, 70], [15, 28, 43, 60, 72], [3, 19, 'FREE', 59, 62], [6, 18, 31, 49, 64], [5, 30, 33, 46, 66]],
+    14: [[5, 19, 37, 53, 64], [3, 28, 32, 54, 65], [11, 18, 'FREE', 57, 63], [4, 29, 36, 50, 70], [8, 26, 35, 55, 67]],
+    15: [[5, 26, 43, 59, 66], [2, 30, 34, 52, 70], [6, 24, 'FREE', 56, 62], [11, 20, 35, 49, 65], [3, 19, 39, 47, 74]],
+    16: [[5, 20, 32, 50, 61], [12, 19, 40, 55, 75], [9, 17, 'FREE', 60, 72], [7, 29, 45, 47, 66], [6, 16, 41, 49, 63]],
+    17: [[7, 25, 36, 49, 67], [6, 21, 40, 57, 61], [11, 16, 'FREE', 51, 66], [9, 18, 44, 52, 70], [5, 23, 35, 59, 63]],
+    18: [[11, 28, 39, 58, 70], [1, 27, 41, 53, 68], [15, 25, 'FREE', 49, 67], [3, 26, 43, 52, 63], [9, 23, 34, 50, 75]],
+    19: [[13, 29, 44, 53, 73], [4, 24, 41, 48, 62], [8, 30, 'FREE', 49, 66], [9, 21, 40, 52, 68], [10, 16, 39, 55, 65]],
+    20: [[10, 24, 40, 59, 65], [4, 20, 44, 47, 75], [15, 23, 'FREE', 50, 67], [6, 18, 39, 54, 70], [13, 16, 35, 48, 68]],
+    21: [[12, 17, 41, 47, 71], [14, 23, 42, 55, 70], [15, 20, 'FREE', 50, 72], [8, 30, 33, 59, 73], [11, 27, 37, 57, 68]],
+    22: [[12, 18, 44, 49, 64], [7, 25, 40, 56, 71], [11, 23, 'FREE', 50, 62], [9, 19, 35, 55, 69], [8, 22, 37, 51, 73]],
+    23: [[12, 27, 39, 47, 71], [13, 24, 36, 49, 65], [2, 20, 'FREE', 55, 73], [6, 28, 42, 58, 75], [11, 23, 33, 59, 69]],
+    24: [[9, 24, 40, 54, 69], [6, 26, 39, 60, 63], [2, 29, 'FREE', 56, 74], [12, 23, 35, 48, 72], [15, 21, 45, 52, 65]],
+    25: [[13, 28, 44, 58, 73], [10, 30, 43, 49, 67], [6, 18, 'FREE', 60, 63], [1, 27, 39, 52, 61], [4, 25, 34, 56, 69]],
+    26: [[12, 27, 41, 50, 65], [4, 29, 34, 51, 69], [11, 26, 'FREE', 46, 71], [3, 24, 33, 60, 70], [1, 21, 31, 58, 63]],
+    27: [[9, 26, 45, 47, 74], [13, 18, 31, 51, 68], [6, 27, 'FREE', 59, 63], [11, 16, 42, 60, 69], [5, 29, 35, 46, 73]],
+    28: [[7, 25, 42, 55, 74], [13, 28, 43, 46, 67], [3, 29, 'FREE', 59, 70], [14, 16, 33, 60, 68], [6, 20, 34, 50, 72]],
+    29: [[4, 29, 44, 50, 61], [8, 28, 37, 51, 66], [1, 17, 'FREE', 52, 68], [7, 22, 42, 57, 70], [10, 23, 35, 53, 71]],
+    30: [[3, 27, 39, 56, 65], [15, 28, 33, 53, 75], [12, 16, 'FREE', 58, 62], [13, 26, 32, 54, 71], [6, 20, 41, 51, 61]],
+    31: [[5, 16, 35, 49, 70], [9, 23, 42, 60, 68], [4, 26, 'FREE', 56, 73], [3, 20, 45, 50, 61], [6, 25, 44, 54, 74]],
+    32: [[7, 24, 44, 58, 69], [14, 16, 42, 60, 72], [8, 29, 'FREE', 46, 74], [1, 21, 34, 59, 62], [9, 17, 33, 49, 75]],
+    33: [[14, 26, 33, 47, 69], [7, 18, 44, 55, 67], [12, 25, 'FREE', 52, 65], [9, 20, 45, 56, 73], [13, 19, 42, 51, 62]],
+    34: [[11, 16, 33, 56, 74], [3, 17, 38, 58, 73], [15, 27, 'FREE', 50, 67], [13, 25, 36, 57, 66], [2, 24, 32, 52, 65]],
+    35: [[8, 20, 35, 50, 70], [1, 23, 38, 53, 73], [11, 19, 'FREE', 51, 68], [3, 28, 43, 56, 67], [5, 27, 41, 59, 63]],
+    36: [[15, 20, 42, 51, 70], [3, 18, 44, 47, 67], [4, 28, 'FREE', 60, 74], [8, 24, 39, 49, 73], [13, 22, 31, 56, 75]],
+    37: [[12, 27, 44, 55, 69], [1, 22, 37, 51, 63], [4, 24, 'FREE', 57, 64], [8, 21, 43, 53, 71], [6, 20, 41, 54, 70]],
+    38: [[10, 21, 32, 49, 74], [1, 18, 41, 48, 75], [2, 19, 'FREE', 60, 62], [6, 27, 37, 53, 67], [8, 29, 35, 55, 68]],
+    39: [[14, 23, 45, 60, 63], [5, 28, 38, 52, 72], [7, 30, 'FREE', 59, 62], [2, 22, 32, 54, 67], [9, 19, 31, 56, 70]],
+    40: [[1, 29, 36, 52, 66], [4, 23, 33, 47, 73], [9, 30, 'FREE', 60, 63], [3, 20, 45, 55, 69], [6, 24, 42, 46, 74]],
+    41: [[1, 23, 31, 60, 69], [6, 22, 37, 50, 70], [13, 19, 'FREE', 58, 75], [5, 28, 42, 54, 64], [3, 27, 38, 47, 66]],
+    42: [[15, 16, 45, 60, 67], [1, 22, 41, 54, 70], [4, 30, 'FREE', 56, 62], [5, 26, 44, 51, 75], [8, 25, 31, 48, 71]],
+    43: [[11, 17, 35, 48, 62], [5, 23, 38, 52, 75], [7, 25, 'FREE', 51, 63], [1, 26, 44, 53, 73], [15, 30, 41, 46, 65]],
+    44: [[12, 19, 44, 46, 61], [8, 16, 42, 48, 71], [7, 26, 'FREE', 56, 67], [1, 17, 45, 58, 64], [5, 29, 38, 54, 74]],
+    45: [[7, 16, 42, 52, 64], [10, 20, 35, 57, 72], [14, 27, 'FREE', 58, 69], [8, 17, 33, 55, 63], [6, 19, 32, 59, 61]],
+    46: [[8, 19, 45, 57, 69], [10, 24, 35, 49, 62], [9, 30, 'FREE', 53, 66], [11, 18, 44, 51, 65], [4, 25, 31, 48, 68]],
+    47: [[14, 29, 38, 53, 66], [11, 20, 35, 58, 74], [10, 17, 'FREE', 59, 61], [4, 25, 44, 56, 75], [7, 23, 37, 49, 64]],
+    48: [[14, 22, 45, 53, 67], [7, 23, 44, 59, 74], [8, 29, 'FREE', 52, 68], [10, 24, 34, 55, 70], [9, 25, 38, 54, 71]],
+    49: [[1, 24, 35, 59, 64], [7, 29, 40, 50, 73], [8, 23, 'FREE', 57, 75], [12, 27, 32, 48, 61], [10, 18, 39, 54, 62]],
+    50: [[13, 27, 32, 57, 74], [15, 17, 31, 46, 65], [8, 30, 'FREE', 55, 63], [3, 21, 34, 60, 70], [5, 25, 37, 53, 66]],
+    51: [[15, 16, 43, 56, 63], [14, 30, 32, 49, 65], [9, 20, 'FREE', 51, 62], [11, 25, 44, 52, 69], [4, 26, 34, 48, 70]],
+    52: [[2, 21, 35, 59, 68], [3, 19, 41, 58, 67], [11, 24, 'FREE', 54, 62], [5, 16, 34, 53, 65], [7, 17, 39, 47, 63]],
+    53: [[9, 28, 40, 51, 71], [1, 29, 31, 46, 75], [2, 27, 'FREE', 50, 64], [5, 23, 41, 47, 66], [6, 30, 45, 53, 72]],
+    54: [[13, 20, 34, 47, 63], [2, 21, 44, 58, 73], [3, 28, 'FREE', 48, 62], [6, 16, 43, 50, 66], [5, 17, 38, 51, 65]],
+    55: [[14, 16, 45, 56, 75], [8, 23, 43, 47, 69], [1, 19, 'FREE', 57, 74], [5, 18, 41, 52, 72], [11, 21, 34, 46, 68]],
+    56: [[1, 25, 36, 60, 74], [5, 30, 43, 50, 72], [7, 21, 'FREE', 55, 69], [12, 24, 34, 51, 71], [15, 17, 40, 49, 63]],
+    57: [[10, 23, 33, 60, 69], [2, 20, 40, 56, 75], [3, 22, 'FREE', 59, 68], [7, 30, 44, 53, 65], [9, 19, 31, 58, 61]],
+    58: [[2, 30, 32, 46, 62], [5, 21, 35, 51, 63], [13, 20, 'FREE', 50, 64], [11, 23, 39, 54, 66], [1, 29, 44, 57, 73]],
+    59: [[13, 19, 39, 52, 71], [1, 25, 37, 50, 74], [4, 18, 'FREE', 55, 61], [7, 21, 44, 47, 64], [5, 30, 41, 49, 66]],
+    60: [[4, 22, 36, 49, 61], [2, 18, 37, 60, 63], [14, 26, 'FREE', 59, 65], [7, 21, 42, 57, 73], [10, 20, 31, 46, 75]],
+    61: [[12, 25, 37, 57, 69], [8, 23, 43, 53, 65], [6, 18, 'FREE', 46, 72], [1, 16, 44, 48, 62], [9, 24, 32, 56, 68]],
+    62: [[1, 20, 31, 54, 69], [7, 28, 36, 60, 68], [15, 30, 'FREE', 47, 74], [11, 17, 37, 53, 67], [3, 22, 44, 58, 72]],
+    63: [[3, 17, 40, 46, 73], [13, 21, 42, 52, 63], [6, 20, 'FREE', 56, 69], [9, 19, 34, 47, 71], [10, 26, 45, 53, 68]],
+    64: [[12, 19, 38, 50, 66], [3, 21, 34, 52, 71], [4, 22, 'FREE', 48, 72], [6, 26, 33, 58, 62], [9, 20, 42, 57, 64]],
+    65: [[13, 16, 31, 58, 75], [5, 25, 37, 60, 62], [8, 26, 'FREE', 47, 64], [9, 27, 43, 49, 66], [11, 22, 44, 51, 68]],
+    66: [[11, 25, 37, 59, 72], [7, 27, 40, 47, 67], [1, 23, 'FREE', 52, 69], [10, 24, 45, 49, 66], [4, 16, 39, 60, 63]],
+    67: [[12, 27, 42, 47, 61], [13, 26, 39, 54, 72], [6, 21, 'FREE', 50, 74], [5, 24, 33, 58, 69], [11, 23, 36, 56, 70]],
+    68: [[7, 30, 35, 59, 62], [15, 29, 33, 60, 67], [11, 27, 'FREE', 51, 71], [4, 26, 37, 52, 73], [13, 22, 31, 55, 66]],
+    69: [[15, 18, 34, 49, 68], [5, 20, 40, 51, 61], [7, 22, 'FREE', 56, 69], [6, 26, 35, 58, 62], [9, 28, 42, 52, 70]],
+    70: [[7, 29, 43, 58, 67], [8, 23, 33, 47, 68], [10, 24, 'FREE', 48, 69], [12, 17, 39, 52, 73], [14, 18, 36, 56, 62]],
+    71: [[2, 30, 31, 47, 73], [3, 16, 36, 53, 71], [8, 26, 'FREE', 56, 68], [6, 23, 33, 58, 75], [9, 19, 45, 50, 63]],
+    72: [[2, 23, 42, 47, 73], [11, 28, 40, 53, 70], [8, 21, 'FREE', 57, 64], [7, 27, 44, 55, 66], [1, 19, 35, 48, 72]],
+    73: [[14, 18, 37, 60, 62], [7, 24, 31, 51, 63], [13, 30, 'FREE', 55, 71], [10, 25, 43, 58, 74], [3, 22, 38, 56, 64]],
+    74: [[10, 19, 39, 53, 65], [6, 23, 35, 47, 72], [15, 16, 'FREE', 57, 74], [5, 22, 34, 52, 73], [7, 17, 44, 60, 61]],
+    75: [[10, 27, 41, 57, 73], [1, 29, 35, 51, 62], [3, 17, 'FREE', 54, 64], [9, 19, 32, 47, 65], [4, 24, 39, 58, 69]],
+    76: [[14, 30, 31, 47, 62], [15, 29, 34, 60, 63], [2, 19, 'FREE', 59, 68], [5, 21, 39, 54, 70], [7, 23, 41, 55, 69]],
+    77: [[15, 22, 38, 49, 67], [11, 23, 37, 52, 72], [10, 29, 'FREE', 47, 71], [8, 18, 39, 56, 66], [9, 20, 36, 60, 63]],
+    78: [[13, 18, 34, 53, 68], [4, 17, 41, 52, 61], [3, 20, 'FREE', 59, 64], [10, 29, 32, 54, 65], [5, 28, 40, 50, 73]],
+    79: [[3, 26, 39, 46, 71], [2, 30, 42, 57, 61], [12, 19, 'FREE', 58, 66], [4, 22, 38, 59, 67], [6, 21, 40, 52, 62]],
+    80: [[2, 23, 45, 53, 70], [12, 18, 36, 58, 64], [15, 20, 'FREE', 48, 63], [7, 22, 34, 52, 71], [3, 16, 42, 46, 72]],
+    81: [[13, 28, 43, 48, 74], [9, 19, 37, 57, 68], [11, 23, 'FREE', 56, 61], [4, 30, 44, 51, 67], [6, 16, 38, 46, 75]],
+    82: [[11, 23, 40, 56, 68], [2, 28, 45, 47, 72], [7, 27, 'FREE', 59, 73], [6, 20, 38, 51, 63], [12, 30, 35, 46, 74]],
+    83: [[5, 26, 45, 56, 70], [11, 18, 43, 49, 74], [1, 28, 'FREE', 52, 66], [4, 21, 41, 57, 68], [10, 23, 38, 54, 69]],
+    84: [[3, 27, 45, 52, 73], [7, 18, 44, 55, 67], [12, 25, 'FREE', 58, 65], [9, 20, 40, 56, 70], [13, 19, 42, 51, 62]],
+    85: [[7, 30, 35, 54, 62], [5, 29, 33, 60, 67], [11, 27, 'FREE', 51, 71], [4, 26, 37, 52, 73], [13, 22, 31, 59, 66]],
+    86: [[7, 22, 38, 56, 74], [9, 28, 44, 46, 67], [13, 19, 'FREE', 59, 73], [15, 16, 36, 57, 61], [14, 29, 40, 50, 65]],
+    87: [[12, 16, 37, 58, 73], [1, 20, 40, 48, 75], [7, 19, 'FREE', 50, 70], [8, 26, 33, 56, 67], [6, 24, 38, 54, 63]],
+    88: [[7, 24, 41, 54, 70], [10, 18, 44, 49, 75], [15, 17, 'FREE', 58, 73], [2, 28, 34, 57, 67], [3, 22, 31, 53, 71]],
+    89: [[7, 18, 38, 50, 69], [10, 29, 42, 59, 74], [15, 16, 'FREE', 56, 70], [1, 24, 43, 49, 73], [5, 23, 33, 48, 65]],
+    90: [[2, 24, 40, 50, 62], [6, 21, 43, 60, 63], [11, 19, 'FREE', 58, 64], [15, 27, 34, 47, 69], [1, 28, 35, 51, 73]],
+    91: [[12, 17, 33, 52, 61], [6, 19, 42, 57, 69], [8, 21, 'FREE', 60, 75], [11, 25, 34, 55, 68], [7, 26, 43, 46, 71]],
+    92: [[6, 23, 39, 56, 75], [12, 24, 40, 58, 66], [8, 30, 'FREE', 48, 68], [7, 20, 42, 49, 62], [2, 21, 36, 51, 70]],
+    93: [[15, 23, 36, 52, 71], [14, 30, 41, 59, 68], [2, 29, 'FREE', 55, 75], [5, 21, 40, 54, 63], [4, 20, 37, 58, 70]],
+    94: [[8, 28, 42, 49, 71], [1, 29, 44, 54, 73], [4, 20, 'FREE', 60, 63], [7, 19, 32, 50, 65], [6, 16, 34, 47, 67]],
+    95: [[15, 24, 37, 46, 63], [5, 20, 35, 52, 67], [13, 30, 'FREE', 56, 74], [2, 23, 40, 47, 75], [8, 27, 39, 60, 66]],
+    96: [[6, 21, 36, 57, 63], [14, 25, 45, 46, 61], [13, 27, 'FREE', 48, 66], [3, 24, 35, 59, 65], [5, 29, 43, 54, 62]],
+    97: [[8, 24, 38, 53, 71], [9, 30, 34, 47, 69], [12, 23, 'FREE', 49, 70], [3, 19, 37, 59, 68], [1, 18, 39, 56, 63]],
+    98: [[8, 16, 37, 57, 68], [13, 29, 36, 54, 63], [3, 21, 'FREE', 56, 67], [6, 26, 33, 52, 70], [5, 24, 45, 59, 73]],
+    99: [[12, 28, 36, 51, 68], [10, 21, 45, 50, 74], [4, 16, 'FREE', 60, 70], [6, 22, 39, 56, 72], [1, 27, 40, 49, 63]],
+    100: [[2, 26, 36, 60, 67], [5, 19, 45, 56, 66], [7, 22, 'FREE', 47, 69], [6, 28, 38, 55, 63], [4, 27, 37, 57, 62]],
+    101: [[8, 24, 39, 53, 68], [14, 19, 36, 58, 72], [3, 25, 'FREE', 59, 61], [2, 16, 35, 47, 63], [5, 26, 34, 50, 75]],
+    102: [[14, 22, 33, 53, 70], [13, 20, 37, 47, 63], [4, 24, 'FREE', 57, 67], [8, 18, 35, 52, 69], [3, 26, 34, 49, 71]],
+    103: [[9, 25, 39, 54, 61], [10, 16, 35, 48, 70], [3, 24, 'FREE', 50, 71], [14, 20, 38, 60, 69], [2, 17, 40, 57, 64]],
+    104: [[14, 21, 34, 59, 63], [6, 19, 38, 48, 65], [2, 27, 'FREE', 52, 73], [7, 16, 43, 46, 66], [12, 17, 45, 55, 72]],
+    105: [[9, 26, 35, 50, 65], [10, 24, 34, 51, 69], [7, 30, 'FREE', 47, 66], [3, 19, 36, 46, 62], [11, 16, 37, 48, 67]],
+    106: [[7, 27, 33, 54, 62], [6, 25, 45, 52, 66], [10, 30, 'FREE', 49, 73], [5, 23, 44, 57, 67], [11, 16, 38, 59, 71]],
+    107: [[1, 16, 33, 46, 75], [9, 18, 42, 51, 61], [7, 19, 'FREE', 57, 71], [15, 30, 36, 48, 62], [6, 27, 31, 60, 67]],
+    108: [[10, 22, 43, 49, 70], [15, 16, 42, 56, 63], [12, 24, 'FREE', 55, 69], [3, 30, 31, 50, 74], [13, 21, 37, 52, 67]],
+    109: [[14, 25, 32, 48, 61], [10, 27, 43, 52, 64], [11, 30, 'FREE', 55, 66], [12, 22, 34, 56, 68], [13, 17, 38, 58, 70]],
+    110: [[14, 29, 37, 51, 66], [11, 23, 40, 57, 65], [1, 18, 'FREE', 52, 75], [2, 22, 36, 47, 74], [5, 26, 39, 56, 62]],
+    111: [[8, 18, 39, 48, 70], [5, 19, 35, 55, 66], [9, 29, 'FREE', 57, 72], [1, 25, 38, 60, 63], [11, 20, 42, 46, 67]],
+    112: [[2, 23, 44, 49, 63], [7, 19, 32, 50, 66], [10, 29, 'FREE', 57, 67], [14, 25, 34, 59, 72], [1, 30, 42, 46, 75]],
+    113: [[1, 28, 45, 48, 65], [4, 27, 41, 46, 64], [6, 26, 'FREE', 51, 68], [5, 16, 32, 56, 69], [3, 20, 31, 55, 61]],
+    114: [[12, 28, 44, 60, 75], [13, 27, 32, 58, 61], [15, 17, 'FREE', 57, 66], [3, 19, 37, 52, 68], [5, 21, 41, 53, 69]],
+    115: [[10, 26, 41, 52, 75], [8, 28, 37, 58, 66], [1, 16, 'FREE', 56, 74], [15, 25, 45, 46, 68], [6, 18, 39, 47, 63]],
+    116: [[8, 25, 38, 54, 69], [4, 21, 36, 58, 62], [2, 23, 'FREE', 52, 73], [3, 28, 43, 48, 74], [13, 27, 35, 59, 70]],
+    117: [[2, 28, 32, 50, 72], [4, 27, 39, 58, 61], [5, 17, 'FREE', 52, 62], [8, 24, 40, 60, 66], [3, 22, 41, 51, 64]],
+    118: [[2, 24, 31, 57, 61], [9, 27, 44, 59, 68], [1, 30, 'FREE', 50, 63], [13, 29, 35, 56, 75], [5, 28, 33, 58, 64]],
+    119: [[2, 30, 42, 56, 67], [12, 25, 35, 57, 66], [3, 17, 'FREE', 55, 71], [1, 29, 43, 54, 70], [8, 20, 31, 48, 72]],
+    120: [[4, 24, 34, 57, 64], [12, 30, 41, 47, 69], [13, 17, 'FREE', 55, 74], [15, 19, 42, 53, 73], [8, 21, 33, 59, 63]],
+    121: [[13, 17, 33, 57, 61], [5, 23, 39, 55, 63], [3, 20, 'FREE', 53, 70], [15, 16, 38, 49, 71], [1, 28, 37, 58, 69]],
+    122: [[8, 26, 32, 46, 69], [10, 18, 42, 56, 65], [4, 20, 'FREE', 58, 72], [3, 21, 36, 55, 66], [13, 23, 37, 50, 61]],
+    123: [[4, 26, 41, 53, 74], [7, 29, 32, 52, 62], [3, 22, 'FREE', 47, 70], [15, 25, 42, 46, 73], [2, 28, 33, 51, 61]],
+    125: [[4, 21, 34, 49, 73], [13, 23, 35, 56, 75], [9, 17, 'FREE', 50, 63], [3, 28, 36, 52, 66], [6, 29, 45, 57, 72]],
+    126: [[11, 16, 37, 50, 74], [6, 25, 38, 60, 72], [4, 24, 'FREE', 53, 65], [10, 22, 44, 54, 73], [1, 21, 40, 49, 63]],
+    127: [[3, 19, 36, 53, 71], [11, 26, 32, 49, 74], [2, 18, 'FREE', 56, 70], [9, 21, 41, 54, 62], [14, 25, 35, 55, 63]],
+    128: [[7, 17, 42, 46, 71], [8, 29, 31, 58, 65], [9, 22, 'FREE', 48, 69], [12, 30, 40, 53, 62], [4, 18, 36, 60, 67]],
+    129: [[13, 16, 44, 47, 73], [6, 20, 41, 55, 63], [8, 30, 'FREE', 59, 69], [5, 17, 43, 51, 75], [9, 19, 32, 46, 72]],
+    130: [[8, 27, 44, 60, 71], [9, 18, 36, 48, 67], [14, 22, 'FREE', 54, 65], [1, 25, 31, 59, 74], [15, 29, 35, 55, 69]],
+    131: [[6, 22, 35, 51, 74], [15, 18, 39, 55, 73], [4, 20, 'FREE', 50, 65], [7, 28, 42, 47, 70], [9, 27, 43, 53, 69]],
+    132: [[12, 22, 34, 57, 66], [4, 17, 43, 55, 73], [5, 26, 'FREE', 48, 69], [1, 27, 31, 50, 68], [8, 24, 45, 58, 72]],
+    133: [[11, 17, 42, 55, 66], [10, 29, 33, 59, 74], [5, 26, 'FREE', 51, 69], [2, 16, 37, 58, 73], [3, 18, 41, 50, 71]],
+    134: [[11, 20, 37, 57, 72], [10, 28, 43, 46, 75], [4, 27, 'FREE', 51, 68], [3, 23, 34, 60, 70], [5, 26, 42, 47, 63]],
+    135: [[15, 29, 43, 47, 66], [13, 19, 37, 49, 61], [2, 17, 'FREE', 56, 68], [5, 30, 45, 48, 73], [14, 27, 41, 54, 67]],
+    136: [[8, 17, 43, 49, 61], [3, 22, 38, 55, 65], [5, 28, 'FREE', 57, 69], [14, 30, 39, 48, 75], [9, 18, 45, 51, 67]],
+    137: [[8, 25, 32, 47, 66], [4, 29, 41, 60, 67], [7, 18, 'FREE', 52, 63], [13, 16, 44, 46, 69], [2, 27, 45, 58, 71]],
+    138: [[11, 22, 45, 47, 61], [6, 20, 44, 63, 70], [8, 27, 'FREE', 58, 75], [12, 28, 33, 49, 63], [7, 19, 35, 50, 68]],
+    139: [[1, 26, 39, 59, 69], [15, 17, 42, 50, 74], [10, 23, 'FREE', 57, 68], [11, 19, 40, 51, 72], [3, 16, 41, 49, 63]],
+    140: [[7, 27, 38, 53, 75], [15, 30, 33, 52, 67], [6, 20, 'FREE', 46, 72], [10, 23, 31, 57, 63], [2, 25, 34, 47, 74]],
+    141: [[11, 26, 34, 53, 74], [1, 23, 44, 46, 64], [2, 18, 'FREE', 50, 61], [9, 21, 33, 58, 69], [7, 24, 38, 47, 71]],
+    142: [[15, 17, 32, 52, 75], [13, 20, 31, 58, 63], [2, 21, 'FREE', 47, 67], [14, 19, 43, 54, 70], [9, 23, 39, 46, 68]],
+    143: [[12, 22, 42, 54, 71], [10, 29, 38, 57, 64], [7, 19, 'FREE', 58, 69], [8, 18, 44, 55, 61], [9, 30, 43, 46, 62]],
+    144: [[13, 18, 36, 46, 68], [7, 20, 37, 58, 70], [10, 24, 'FREE', 48, 62], [4, 16, 42, 53, 65], [12, 23, 31, 55, 73]],
+    145: [[11, 21, 43, 58, 67], [15, 25, 42, 55, 71], [2, 17, 'FREE', 54, 73], [12, 30, 40, 49, 66], [9, 23, 32, 46, 61]],
+    146: [[9, 23, 40, 55, 74], [8, 19, 39, 48, 69], [2, 17, 'FREE', 50, 66], [12, 29, 34, 49, 75], [15, 22, 45, 59, 63]],
+    147: [[10, 25, 42, 55, 67], [9, 29, 35, 46, 70], [4, 24, 'FREE', 52, 61], [2, 18, 40, 57, 71], [15, 28, 33, 50, 64]],
+    148: [[5, 23, 34, 59, 61], [15, 25, 33, 48, 62], [2, 28, 'FREE', 56, 73], [10, 20, 44, 46, 72], [12, 29, 32, 49, 68]],
+    149: [[14, 29, 38, 60, 70], [13, 28, 42, 47, 71], [5, 20, 'FREE', 48, 65], [9, 26, 31, 49, 68], [8, 17, 45, 59, 72]],
+    150: [[6, 18, 42, 53, 68], [7, 16, 41, 55, 75], [1, 19, 'FREE', 48, 74], [5, 22, 34, 56, 69], [14, 30, 39, 51, 65]]
+};
+let currentUsername = null;
+let registeredNumbers = [];
+let allPlayerCards = {};
+let currentAudio = null;
+let audioContext = null;
+let isOwnerLoggedIn = false;
+let gameState = {
+balance: 0,
+visualBalance: 0, // The balance shown to the user
+currentBetAmount: 20,
+isPlaying: false,
+nextCallTimeoutId: null,
+startTimeoutId: null,
+calledNumbers: [],
+numberPool: {},
+letterCycle: [],
+letterCycleIndex: 0,
+speed: 2500,
+voiceSpeed: 1.0,
+masterVolume: 1.0,
+isLocked: false,
+winnerInfo: null,
+winningLinesRequired: 1,
+};
+const audioMap = {};
+const allAudioUrls = {
+    welcome: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696252/well_come_npljjx.mp3",
+    notRegistered: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/%E1%8B%A8%E1%8B%9A_%E1%8A%AB%E1%88%AD%E1%89%B4%E1%88%8B_%E1%89%81%E1%8C%A5%E1%88%AD_%E1%8A%A0%E1%88%8D%E1%89%B0%E1%88%98%E1%8B%98%E1%8C%88%E1%89%A0%E1%88%9D_p9cbi2.mp3",
+    notWin: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/%E1%8B%AD%E1%88%85_%E1%8A%AB%E1%88%AD%E1%89%B4%E1%88%8B_%E1%8A%A0%E1%88%8B%E1%88%B8%E1%8A%90%E1%8D%88%E1%88%9D_s07ewj.mp3",
+    winCard: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/Winning_ixyb9d.mp3",
+    winTwoLines: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/Winning_ixyb9d.mp3", // Using same win sound for two lines
+    start: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/starting_audio_ameiat.mp3",
+    stop: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/stopping_game_gevja6.mp3",
+    mixing: "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/caller_numbers_mixing_audio_MP3_pntjqi.mp3"
+};
+const numberAudioUrls = {
+    "B1": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695618/b1_gnuiir.mp3",
+    "B2": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757694376/b2_wmvu2p.mp3",
+    "B3": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695617/b3_nochgl.mp3",
+    "B4": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695652/b4_s9iyai.mp3",
+    "B5": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695618/b5_yzpadc.mp3",
+    "B6": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695619/b6_tnx42i.mp3",
+    "B7": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695652/b7_yhtxcl.mp3",
+    "B8": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695653/b8_zu6yzz.mp3",
+    "B9": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695655/b9_y5rfc0.mp3",
+    "B10": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695657/B10_d6l5qs.mp3",
+    "B11": "https://res.cloudinary.com/dbyxso1tw/video/upload/v1752793835/1752761940349Converted_dhp6om.mp3", // NOTE: New URL for B11 was not provided, keeping old one.
+    "B12": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695654/b12_dded1h.mp3",
+    "B13": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695654/b13_er85b9.mp3",
+    "B14": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695656/b14_xxe3sb.mp3",
+    "B15": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695654/B15_z3qpas.mp3",
+    "I16": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695658/i16_q9tlgv.mp3",
+    "I17": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695659/i17_vmnm1h.mp3",
+    "I18": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695656/i18_nfm7fb.mp3",
+    "I19": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695655/i19_jvucw2.mp3",
+    "I20": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695658/i20_xicpkq.mp3",
+    "I21": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696052/i21_cvjs5g.mp3",
+    "I22": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695659/i22_xp8xr7.mp3",
+    "I23": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696051/i23_yisiyu.mp3",
+    "I24": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695656/i24_cibiwp.mp3",
+    "I25": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696051/i25_com4bk.mp3",
+    "I26": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696056/I_26_qwwous.mp3",
+    "I27": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695658/i27_yz8o4r.mp3",
+    "I28": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757695657/i28_r930je.mp3",
+    "I29": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757866002/i29_pzjr9m.mp3",
+    "I30": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/i30_s3vrcg.mp3",
+    "N31": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696056/N31_jbgek4.mp3",
+    "N32": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696120/n32_wfrojt.mp3",
+    "N33": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696253/n33_skrm72.mp3",
+    "N34": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696057/N34_p46zjn.mp3",
+    "N35": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696055/N_35_gjhji6.mp3",
+    "N36": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696122/n36_pk7t4l.mp3",
+    "N37": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696121/n37_dthro6.mp3",
+    "N38": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696253/n38_i3ta8h.mp3",
+    "N39": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696121/n39_exqkfe.mp3",
+    "N40": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696121/n40_c5v8zb.mp3",
+    "N41": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696253/n41_y1gxfp.mp3",
+    "N42": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696120/n42_ix5q43.mp3",
+    "N43": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696055/N43_pteki2.mp3",
+    "N44": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696057/n44_gekizt.mp3",
+    "N45": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696057/n45_uxgcsq.mp3",
+    "G46": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/G46_miyly5.mp3",
+    "G47": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/g47_eutonn.mp3",
+    "G48": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696176/g48_h5uuih.mp3",
+    "G49": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/g49_z0x3so.mp3",
+    "G50": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696174/g50_oi1sjl.mp3",
+    "G51": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/g51_xrmtyj.mp3",
+    "G52": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696176/g52_brn3ar.mp3",
+    "G53": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696122/G_53_pgkvr8.mp3",
+    "G54": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696122/G54_igape5.mp3",
+    "G55": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696126/g55_l3eksh.mp3",
+    "G56": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696123/g56_bt48kv.mp3",
+    "G57": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/g57_vgpbqf.mp3",
+    "G58": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696175/g58_l1gd1m.mp3",
+    "G59": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696122/g59_excqzm.mp3",
+    "G60": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696176/g60_fpx1t6.mp3",
+    "O61": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696246/o61_c4mbip.mp3",
+    "O62": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/o62_priomv.mp3",
+    "O63": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696243/o63_trmxlk.mp3",
+    "O64": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696248/O64_tslgrx.mp3",
+    "O65": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696247/O65_ma9fxk.mp3",
+    "O66": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696246/O66_obipor.mp3",
+    "O67": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/O_67_uczz9c.mp3",
+    "O68": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696247/o68_fzaamu.mp3",
+    "O69": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696177/o69_yea3dj.mp3",
+    "O70": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/o70_finjaj.mp3",
+    "O71": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696244/o71_x7tmby.mp3",
+    "O72": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696177/o72_wr8roa.mp3",
+    "O73": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696177/o73_ubpm6e.mp3",
+    "O74": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696243/o74_z5t4gj.mp3",
+    "O75": "https://res.cloudinary.com/djzspwc4d/video/upload/v1757696176/o75_oet8iw.mp3"
+};
+function initAudioContext() { if (audioContext !== null) return; try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); if (audioContext.state === 'suspended') { audioContext.resume(); } } catch (e) { console.error("Web Audio API is not supported."); } }
+async function preloadAndCacheAudio() {
+const preloader = document.getElementById('audio-preloader');
+const loadingMessage = document.getElementById('loading-message');
+const loadingProgress = document.getElementById('loading-progress');
+preloader.style.display = 'flex';
+const allUrls = { ...allAudioUrls, ...numberAudioUrls };
+const urlEntries = Object.entries(allUrls);
+let loadedCount = 0;
+const totalCount = urlEntries.length;
+await Promise.all(urlEntries.map(async ([key, url]) => {
+try {
+const response = await fetch(url);
+if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+const blob = await response.blob();
+const objectURL = URL.createObjectURL(blob);
+const audio = new Audio(objectURL);
+audio.preload = 'auto';
+audioMap[key.toUpperCase()] = audio;
+} catch (error) {
+console.error(`Could not preload audio for key: ${key}.`, error);
+audioMap[key.toUpperCase()] = new Audio(url);
+} finally {
+loadedCount++;
+const percentage = Math.round((loadedCount / totalCount) * 100);
+loadingProgress.textContent = `(${percentage}%)`;
+}
+}));
+loadingMessage.textContent = 'Audio Ready!';
+setTimeout(() => {
+preloader.style.display = 'none';
+document.querySelectorAll('.bingo-btn').forEach(btn => btn.disabled = false);
+quitGame();
+}, 500);
+}
+function playAudio(key, onEndedCallback = null) {
+if (!audioContext || audioContext.state === 'suspended') { if (onEndedCallback) onEndedCallback(); return; }
+if (currentAudio) {
+currentAudio.pause();
+currentAudio.currentTime = 0;
+currentAudio.onended = null;
+}
+const upperKey = key.toUpperCase();
+const audio = audioMap[upperKey];
+if (audio) {
+currentAudio = audio;
+currentAudio.volume = gameState.masterVolume;
+currentAudio.playbackRate = gameState.voiceSpeed;
+currentAudio.onended = onEndedCallback;
+currentAudio.play().catch(e => {
+console.error(`Audio playback FAILED for key '${upperKey}'.`, e);
+if (onEndedCallback) onEndedCallback();
+});
+} else {
+console.error(`Audio key NOT FOUND: '${upperKey}'`);
+if (onEndedCallback) onEndedCallback();
+}
+}
+function getData(key, defaultValue = '{}') { try { return JSON.parse(localStorage.getItem(key) || defaultValue); } catch (e) { console.error(`Could not parse data for key: ${key}. Resetting.`, e); localStorage.setItem(key, defaultValue); return JSON.parse(defaultValue); } }
+function saveData(key, data) { try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) { console.error(`Failed to save data for key: ${key}.`, e); } }
+function getUsers() { return getData('bingoUsers'); }
+function saveUsers(users) { saveData('bingoUsers', users); }
+function getSubscriptions() { return getData('bingoUserSubscriptions', '{}'); }
+function saveSubscriptions(subs) { saveData('bingoUserSubscriptions', subs); }
+function removeUser(usernameToDelete) { const users = getUsers(); const balances = getData('bingoUserBalances'); const subs = getSubscriptions(); if (users[usernameToDelete]) { delete users[usernameToDelete]; delete balances[usernameToDelete]; delete subs[usernameToDelete]; saveUsers(users); saveData('bingoUserBalances', balances); saveSubscriptions(subs); return true; } return false; }
+function saveUser(username, password) { const users = getUsers(); users[username] = password; saveUsers(users); }
+function checkUser(username, password) { return getUsers()[username] === password; }
+function userExists(username) { return getUsers().hasOwnProperty(username); }
+function resetPassword(username, newPassword) { const users = getUsers(); if (users[username]) { users[username] = newPassword; saveUsers(users); return true; } return false; }
+function getUserBalance(username) { return getData('bingoUserBalances')[username] || 0; }
+function saveUserBalance(username, balance) { const balances = getData('bingoUserBalances'); balances[username] = parseFloat(balance) || 0; saveData('bingoUserBalances', balances); }
+function hasActiveSubscription(username) { const subs = getSubscriptions(); const userSub = subs[username]; if (!userSub) return false; return Date.now() < userSub.expiry; }
+function getWinningPatterns() {
+    const patterns = [];
+    // Rows
+    for (let i = 0; i < 5; i++) {
+        const row = [];
+        for (let j = 0; j < 5; j++) {
+            row.push([i, j]);
+        }
+        patterns.push({ name: `Row ${i + 1}`, cells: row });
+    }
+    // Columns
+    for (let i = 0; i < 5; i++) {
+        const col = [];
+        for (let j = 0; j < 5; j++) {
+            col.push([j, i]);
+        }
+        patterns.push({ name: `Column ${'BINGO'[i]}`, cells: col });
+    }
+    // Diagonals
+    const diag1 = [], diag2 = [];
+    for (let i = 0; i < 5; i++) {
+        diag1.push([i, i]);
+        diag2.push([i, 4 - i]);
+    }
+    patterns.push({ name: 'Diagonal', cells: diag1 });
+    patterns.push({ name: 'Diagonal', cells: diag2 });
+    // Four Corners
+    patterns.push({ name: 'Four Corners', cells: [[0, 0], [0, 4], [4, 0], [4, 4]] });
+    
+    patterns.push({ name: 'Central Four Corners', cells: [[1, 1], [1, 3], [3, 1], [3, 3]] });
+
+    return patterns;
+}
+function checkCardForWinningPatterns(cardId) {
+const cardData = allPlayerCards[cardId];
+if (!cardData || gameState.calledNumbers.length < 4) {
+return { lineCount: 0, winningPatterns: [] };
+}
+const patterns = getWinningPatterns();
+const foundPatterns = [];
+for (const pattern of patterns) {
+if (pattern.cells.every(([r, c]) => {
+const num = cardData[r][c];
+return num === 'FREE' || gameState.calledNumbers.includes(num);
+})) {
+foundPatterns.push(pattern);
+}
+}
+return {
+lineCount: foundPatterns.length,
+winningPatterns: foundPatterns
+};
+}
+function renderWinnerHighlightCard(cardData, winnerInfo) {
+const container = document.getElementById('winnerHighlightSection');
+if (!container) return;
+let gridHtml = '';
+for (let r = 0; r < 5; r++) {
+for (let c = 0; c < 5; c++) {
+const val = cardData[r][c];
+const isWinningCell = winnerInfo.winningCells.some(cell => cell[0] === r && cell[1] === c);
+const highlightClass = isWinningCell ? 'highlight-line' : '';
+const freeClass = (val === 'FREE') ? 'free-cell' : '';
+gridHtml += `<div class="${highlightClass} ${freeClass}">${val}</div>`;
+}
+}
+container.innerHTML = `<div id="winnerHighlightHeader">🎉 BINGO WINNER! 🎉</div> <div id="winnerHighlightInfo"> Card <span style="color:var(--accent-yellow)">#${winnerInfo.cardId}</span> wins with <span style="color:var(--accent-yellow)">${winnerInfo.lineName}</span>! </div> <div id="winnerCardGrid">${gridHtml}</div>`;
+container.style.display = 'block';
+container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function handleWin(winnerInfo) {
+gameState.winnerInfo = winnerInfo;
+renderWinnerHighlightCard(allPlayerCards[winnerInfo.cardId], winnerInfo);
+document.getElementById('gameStateMessage').textContent = `Winner Found! Press 'New Game' to play again.`;
+document.getElementById('quitGameBtn').disabled = false;
+}
+function gameCycle() {
+if (!gameState.isPlaying) return;
+gameState.letterCycle = gameState.letterCycle.filter(letter => gameState.numberPool[letter].length > 0);
+if (gameState.letterCycle.length === 0) {
+stopGame();
+document.getElementById('gameStateMessage').textContent = 'Game Over. All numbers called.';
+document.getElementById('stopGameBtn').disabled = true;
+return;
+}
+if (gameState.letterCycleIndex >= gameState.letterCycle.length) {
+gameState.letterCycleIndex = 0;
+gameState.letterCycle.sort(() => Math.random() - 0.5);
+}
+const currentLetter = gameState.letterCycle[gameState.letterCycleIndex];
+const nextNumber = gameState.numberPool[currentLetter].pop();
+if (nextNumber === undefined) {
+gameCycle();
+return;
+}
+gameState.calledNumbers.push(nextNumber);
+updateCalledNumbersDisplay();
+const audioKey = `${'BINGO'[(Math.ceil(nextNumber / 15) - 1)]}${nextNumber}`;
+const scheduleNextCycle = () => {
+if (gameState.isPlaying) {
+gameState.nextCallTimeoutId = setTimeout(gameCycle, gameState.speed);
+}
+};
+playAudio(audioKey, scheduleNextCycle);
+gameState.letterCycleIndex++;
+}
+function startGame() {
+if (gameState.isLocked) { alert('Balance is too low for the selected bet. Activate a package.'); return; }
+if (gameState.isPlaying || gameState.winnerInfo || registeredNumbers.length === 0) { alert(registeredNumbers.length === 0 ? "Please register at least one card." : "Game is already running or has a winner."); return; }
+clearTimeout(gameState.startTimeoutId);
+clearTimeout(gameState.nextCallTimeoutId);
+if (!hasActiveSubscription(currentUsername)) {
+    gameState.balance -= 80;
+    gameState.visualBalance -= 20;
+}
+updateBalanceAndSubscriptionDisplay();
+gameState.isPlaying = true;
+document.getElementById('startGameBtn').disabled = true;
+document.getElementById('stopGameBtn').disabled = false;
+document.getElementById('quitGameBtn').disabled = true;
+if (gameState.calledNumbers.length === 0) {
+gameState.numberPool = {
+B: Array.from({length: 15}, (_, i) => i + 1),
+I: Array.from({length: 15}, (_, i) => i + 16),
+N: Array.from({length: 15}, (_, i) => i + 31),
+G: Array.from({length: 15}, (_, i) => i + 46),
+O: Array.from({length: 15}, (_, i) => i + 61),
+};
+for (const letter in gameState.numberPool) {
+gameState.numberPool[letter].sort(() => Math.random() - 0.5);
+}
+gameState.letterCycle = ['B', 'I', 'N', 'G', 'O'].sort(() => Math.random() - 0.5);
+gameState.letterCycleIndex = 0;
+}
+document.getElementById('gameStateMessage').textContent = 'Mixing numbers...';
+playAudio('mixing', () => {
+if (gameState.isPlaying) {
+playAudio('start', () => {
+if(gameState.isPlaying) {
+document.getElementById('gameStateMessage').textContent = 'Calling numbers...';
+gameCycle();
+}
+});
+}
+});
+}
+function stopGame() {
+if (!gameState.isPlaying) return;
+clearTimeout(gameState.startTimeoutId);
+clearTimeout(gameState.nextCallTimeoutId);
+gameState.isPlaying = false;
+if (currentAudio) {
+currentAudio.pause();
+currentAudio.currentTime = 0;
+currentAudio.onended = null;
+}
+document.getElementById('startGameBtn').disabled = false;
+document.getElementById('stopGameBtn').disabled = true;
+document.getElementById('quitGameBtn').disabled = false;
+document.getElementById('gameStateMessage').textContent = 'Game paused.';
+playAudio('stop');
+updateBalanceAndSubscriptionDisplay();
+}
+function quitGame() {
+if (gameState.isPlaying) stopGame();
+clearTimeout(gameState.startTimeoutId);
+clearTimeout(gameState.nextCallTimeoutId);
+gameState.calledNumbers = [];
+gameState.numberPool = {};
+gameState.letterCycle = [];
+gameState.letterCycleIndex = 0;
+gameState.winnerInfo = null;
+gameState.isPlaying = false;
+registeredNumbers = [];
+const winnerDisplay = document.getElementById('winnerHighlightSection');
+if (winnerDisplay) {
+winnerDisplay.style.display = 'none';
+winnerDisplay.innerHTML = '';
+}
+updateCalledNumbersDisplay();
+renderBoard();
+renderRegisteredCards();
+document.querySelectorAll('.bingo-card-outside .number-box.marked').forEach(el => el.classList.remove('marked'));
+updateWinningAmount();
+const vEl = document.getElementById('verificationResult');
+if(vEl) { vEl.textContent = ''; }
+if (document.getElementById('verificationCardInput')) {
+document.getElementById('verificationCardInput').value = '';
+}
+if (document.getElementById('quitGameBtn')) {
+document.getElementById('quitGameBtn').disabled = true;
+}
+if (document.getElementById('startGameBtn')) {
+document.getElementById('startGameBtn').disabled = false;
+}
+if (document.getElementById('stopGameBtn')) {
+document.getElementById('stopGameBtn').disabled = true;
+}
+if (document.getElementById('gameStateMessage')) {
+document.getElementById('gameStateMessage').textContent = 'New game ready. Please register cards.';
+}
+gameState.visualBalance = gameState.balance;
+updateBalanceAndSubscriptionDisplay();
+}
+function showModal(title, body, footer) { modalContainer.innerHTML = `<div class="modal-backdrop" style="display: flex;"><div class="modal-content"><div class="modal-header">${title}</div><div class="modal-body">${body}</div><div class="modal-footer">${footer}</div></div></div>`; const backdrop = modalContainer.querySelector('.modal-backdrop'); backdrop.onclick = (e) => { if (e.target === backdrop) hideModal(); }; }
+function hideModal() { modalContainer.innerHTML = ''; }
+function renderLoginForm(message = '', msgClass = 'success-msg', prefillUser = '') {
+const savedUsername = localStorage.getItem('bingoRememberedUser') || prefillUser;
+isOwnerLoggedIn = false;
+mainApp.innerHTML = `<div class="login-container"><div class="bingo-logo" style="background:none; font-size: 2.2rem;">TARIK NICE BINGO</div><div id="formArea"><div id="messageArea" class="${msgClass}">${message}</div><div class="mb-3 text-start"><label class="form-label" for="loginUsername">Username</label><input type="text" id="loginUsername" class="form-control" autocomplete="username" value="${savedUsername}"/></div><div class="mb-3 text-start"><label class="form-label" for="loginPassword">Password</label><input type="password" id="loginPassword" class="form-control" autocomplete="current-password" /></div><button class="btn btn-login" id="loginBtn">Login</button><button class="btn btn-create" id="showCreateBtn">Create New User</button><a href="#" class="forgot-link" id="forgotLink">Forgot Password?</a></div></div>`;
+document.getElementById('loginBtn').onclick = tryLogin;
+document.getElementById('showCreateBtn').onclick = renderCreateForm;
+document.getElementById('forgotLink').onclick = (e) => { e.preventDefault(); renderForgotForm(); };
+}
+function renderCreateForm() { mainApp.querySelector('#formArea').innerHTML = `<div id="messageArea"></div><div class="mb-3 text-start"><label class="form-label" for="createUsername">New Username</label><input type="text" id="createUsername" class="form-control" /></div><div class="mb-3 text-start"><label class="form-label" for="createPassword">New Password</label><input type="password" id="createPassword" class="form-control" /></div><button class="btn btn-create" id="createBtn">Create Account</button><button class="btn btn-login" id="backToLoginBtn">Back to Login</button>`; document.getElementById('createBtn').onclick = tryCreate; document.getElementById('backToLoginBtn').onclick = () => renderLoginForm(); }
+function renderForgotForm() { mainApp.querySelector('#formArea').innerHTML = `<div id="messageArea"></div><h4 style="color:var(--accent-yellow)">Reset Password</h4><div class="mb-3 text-start"><label class="form-label" for="resetUsername">Username</label><input type="text" id="resetUsername" class="form-control" /></div><div class="mb-3 text-start"><label class="form-label" for="resetPassword">New Password</label><input type="password" id="resetPassword" class="form-control" /></div><button class="btn btn-create" id="resetBtn">Reset Password</button><button class="btn btn-login" id="backToLoginBtn">Back to Login</button>`; document.getElementById('resetBtn').onclick = tryResetPassword; document.getElementById('backToLoginBtn').onclick = () => renderLoginForm(); }
+function tryLogin() {
+initAudioContext();
+const username = document.getElementById('loginUsername').value.trim();
+const password = document.getElementById('loginPassword').value.trim();
+if (username === MASTER_RESET_KEY_USER && password === MASTER_RESET_KEY_PASS) {
+const newPassword = prompt("EMERGENCY RESET: Enter the NEW password for the Owner Panel:");
+if (newPassword && newPassword.trim() !== '') {
+const newPasswordHash = CryptoJS.SHA256(newPassword + OWNER_SALT).toString();
+saveData('ownerPasswordHashStore', `"${newPasswordHash}"`);
+alert("Owner password has been reset securely.");
+renderLoginForm();
+} else { alert("Reset cancelled."); }
+return;
+}
+if (checkUser(username, password)) {
+currentUsername = username;
+gameState.balance = getUserBalance(username);
+gameState.visualBalance = gameState.balance;
+localStorage.setItem('bingoRememberedUser', username);
+renderBingoGame();
+preloadAndCacheAudio().then(() => {
+playAudio('welcome');
+});
+} else {
+const msgEl = document.getElementById('messageArea');
+msgEl.textContent = 'Invalid username or password.';
+msgEl.className = 'error-msg';
+}
+}
+function tryCreate() { initAudioContext(); const u = document.getElementById('createUsername').value.trim(); const p = document.getElementById('createPassword').value.trim(); const m = document.getElementById('messageArea'); if (!u || !p) { m.textContent = 'Fields cannot be empty.'; m.className = 'error-msg'; return; } if (userExists(u)) { m.textContent = 'Username already exists.'; m.className = 'error-msg'; } else { saveUser(u, p); saveUserBalance(u, 0); renderLoginForm('Account created! You can now log in.', 'success-msg', u); } }
+function tryResetPassword() { initAudioContext(); const u = document.getElementById('resetUsername').value.trim(); const p = document.getElementById('resetPassword').value.trim(); const m = document.getElementById('messageArea'); if (!u || !p) { m.textContent = 'Fields cannot be empty.'; m.className = 'error-msg'; return; } if (resetPassword(u, p)) { renderLoginForm('Password reset successfully!', 'success-msg', u); } else { m.textContent = 'This username does not exist.'; m.className = 'error-msg'; } }
+function renderBingoGame() {
+mainApp.innerHTML = ` <div class="main-container"> <div class="bingo-logo">TARIK NICE BINGO <span style="font-size: 1rem; color: #ccc;">Welcome, ${currentUsername}</span></div> <button class="logout-btn" id="logoutBtn">Logout</button> <div id="winnerHighlightSection" class="panel-section"></div> <div class="game-layout-container"> <div class="left-panel"> <div class="panel-section"> <div class="panel-section-header">Game Status</div> <div class="game-status-display"> <div id="balanceContainer"></div> <div id="winningAmountDisplay"></div> </div> <div id="gameStateMessage">New game ready.</div> </div> <div class="panel-section"> <div class="panel-section-header">Game Controls</div> <div class="d-flex gap-2 my-2"><button class="bingo-btn bingo-btn-green" id="startGameBtn" disabled>ጀምር</button><button class="bingo-btn bingo-btn-red" id="stopGameBtn" disabled>አቁም</button></div> <div class="d-flex gap-2"><button class="bingo-btn bingo-btn-yellow" id="quitGameBtn" disabled>አዲስ ጨዋታ</button><button class="bingo-btn bingo-btn-blue" id="mixNumbersBtn" disabled>Re-Shuffle</button></div> <div class="my-3"><label class="form-label d-block text-center">Caller Speed</label><div id="callerSpeedContainer" class="speed-control-container"><div class="speed-control-box" data-speed="4000">Slow</div><div class="speed-control-box selected" data-speed="2500">Normal</div><div class="speed-control-box" data-speed="1000">Fast</div><div class="speed-control-box" data-speed="250">V. Fast</div></div></div> <div class="my-3"><label class="form-label d-block text-center">Voice Speed</label><div id="voiceSpeedContainer" class="speed-control-container"><div class="speed-control-box" data-speed="0.75">0.75x</div><div class="speed-control-box selected" data-speed="1.0">1.0x</div><div class="speed-control-box" data-speed="1.5">1.5x</div><div class="speed-control-box" data-speed="2.0">2.0x</div></div></div> <div class="my-3"><label class="form-label d-block text-center">Audio Booster</label><div id="audioBoosterContainer" class="speed-control-container"><div class="speed-control-box" data-volume="0.3">Low</div><div class="speed-control-box" data-volume="0.7">Medium</div><div class="speed-control-box selected" data-volume="1.0">High</div></div></div> </div> <div class="panel-section"> <div class="panel-section-header">Register Cards</div> <div class="board-grid" id="boardGrid"></div> <div class="registered-cards-list" id="registeredCardsList"></div> </div> <div class="panel-section"> <div class="panel-section-header">Betting & Packages</div> <div class="bet-amount-row" id="betAmountSelection"> <button class="bingo-btn bingo-btn-yellow" data-bet="10" disabled>10 ብር</button> <button class="bingo-btn bingo-btn-yellow selected" data-bet="20" disabled>20 ብር</button> <button class="bingo-btn bingo-btn-yellow" data-bet="30" disabled>30 ብር</button> <button class="bingo-btn bingo-btn-yellow" data-bet="50" disabled>50 ብር</button> </div> <div class="activation-section mt-3"> <label class="form-label">Activate Package</label> <div class="d-flex"> <input type="text" id="packageCodeInput" class="form-control" placeholder="Enter Package Code"/> <button id="activatePackageBtn" class="bingo-btn bingo-btn-green" disabled>Activate</button> </div> <div id="activationResult" class="mt-2" style="min-height: 20px; text-align: left;"></div> </div> </div> <div class="panel-section"> <div class="panel-section-header">Winning Condition</div> <div id="winningConditionContainer" class="speed-control-container"> <div class="speed-control-box selected" data-lines="1">One Line</div> <div class="speed-control-box" data-lines="2">Two Lines</div> </div> </div> <div class="panel-section verification-section"> <div class="panel-section-header">Winner Verification (AI)</div> <div class="d-flex"><input type="number" id="verificationCardInput" class="form-control" placeholder="Card ID"/><button id="verifyWinnerBtn" class="bingo-btn bingo-btn-yellow" disabled>Check</button></div> <div id="verificationResult" class="mt-2" style="min-height: 20px; font-weight: bold;"></div> </div> <div id="ownerSection" class="panel-section"></div> </div> <div class="right-panel"> <div class="panel-section"> <div class="game-progress-box"> <div id="currentBallDisplay" class="progress-item"><div class="label">Current Ball</div><div class="value">--</div></div> <div id="gameProgressDisplay" class="progress-item"><div class="label">Game Progress</div><div class="value">0/75</div></div> <div id="recentlyCalledDisplay" class="progress-item"><div class="label">Recently Called</div><div class="value"><span class="text-muted small">No calls yet</span></div></div> </div> </div> <div class="panel-section"> <div class="panel-section-header">All Called Numbers (5x15)</div> <div class="called-numbers-container" id="calledNumbersContainer"></div> </div> <div class="panel-section"> <div class="panel-section-header">Player Cards (5x12) - (<span id="playerCardCount">0</span>)</div> <div id="outsidePlayersContainer" class="outside-players-container"></div> </div> </div> </div> <div class="developer-credit mt-3"><strong>Developed by:</strong> ታሪኩ ተሾመ<br />📞 <a href="tel:+251966118950" style="color:var(--accent-yellow)">+251966118950</a></div> </div>`;
+setupGameEventListeners();
+generateAndRenderAllCards();
+quitGame();
+}
+function setupGameEventListeners() {
+document.getElementById('logoutBtn').onclick = () => { if(confirm('Are you sure you want to log out? Your current balance will be saved.')) { if(gameState.isPlaying) stopGame(); saveUserBalance(currentUsername, gameState.balance); currentUsername = null; isOwnerLoggedIn = false; renderLoginForm(); } };
+let logoClickCount = 0;
+let logoClickTimer = null;
+document.querySelector('.bingo-logo').onclick = () => {
+    clearTimeout(logoClickTimer);
+    logoClickCount++;
+    if (logoClickCount === 7) {
+        const ownerPanel = document.getElementById('ownerSection');
+        if (ownerPanel.style.display !== 'block') {
+             ownerPanel.style.display = 'block';
+             ownerPanel.scrollIntoView({ behavior: 'smooth', block: 'end' });
+             renderOwnerPanel();
+        }
+        logoClickCount = 0;
+    }
+    logoClickTimer = setTimeout(() => {
+        logoClickCount = 0;
+    }, 1500);
+};
+document.getElementById('activatePackageBtn').onclick = activatePackage;
+document.getElementById('betAmountSelection').querySelectorAll('button').forEach(btn => { btn.onclick = () => { document.querySelectorAll('#betAmountSelection .selected').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); gameState.currentBetAmount = parseInt(btn.dataset.bet, 10); updateWinningAmount(); checkGameAccess(); }; });
+document.getElementById('callerSpeedContainer').querySelectorAll('.speed-control-box').forEach(box => { box.onclick = () => { document.querySelectorAll('#callerSpeedContainer .selected').forEach(b => b.classList.remove('selected')); box.classList.add('selected'); gameState.speed = parseInt(box.dataset.speed, 10); }; });
+document.getElementById('voiceSpeedContainer').querySelectorAll('.speed-control-box').forEach(box => { box.onclick = () => { document.querySelectorAll('#voiceSpeedContainer .selected').forEach(b => b.classList.remove('selected')); box.classList.add('selected'); gameState.voiceSpeed = parseFloat(box.dataset.speed); }; });
+document.getElementById('audioBoosterContainer').querySelectorAll('.speed-control-box').forEach(box => { box.onclick = () => { document.querySelectorAll('#audioBoosterContainer .selected').forEach(b => b.classList.remove('selected')); box.classList.add('selected'); gameState.masterVolume = parseFloat(box.dataset.volume); if (currentAudio) { currentAudio.volume = gameState.masterVolume; } }; });
+document.getElementById('winningConditionContainer').querySelectorAll('.speed-control-box').forEach(box => {
+box.onclick = () => {
+if (gameState.isPlaying) {
+alert('Cannot change winning condition while a game is running.');
+return;
+}
+document.querySelectorAll('#winningConditionContainer .selected').forEach(b => b.classList.remove('selected'));
+box.classList.add('selected');
+gameState.winningLinesRequired = parseInt(box.dataset.lines, 10);
+};
+});
+document.getElementById('verifyWinnerBtn').onclick = () => {
+const vResEl = document.getElementById('verificationResult');
+if (gameState.isPlaying) { alert('Stop the game first to verify a winner.'); return; }
+const cardId = parseInt(document.getElementById('verificationCardInput').value, 10);
+if (isNaN(cardId)) { vResEl.textContent = 'Invalid Card ID.'; vResEl.style.color = 'var(--accent-red)'; return; }
+if (!registeredNumbers.includes(cardId)) { playAudio('notRegistered'); vResEl.textContent = `Card ${cardId} is NOT REGISTERED.`; vResEl.style.color = 'var(--accent-red)'; return; }
+const requiredLines = gameState.winningLinesRequired;
+const vResult = checkCardForWinningPatterns(cardId);
+if (vResult.lineCount >= requiredLines) {
+    const winAudioKey = requiredLines >= 2 ? 'winTwoLines' : 'winCard';
+    playAudio(winAudioKey);
+    const allWinningCells = vResult.winningPatterns.flatMap(p => p.cells);
+    const uniqueWinningCells = Array.from(new Set(allWinningCells.map(JSON.stringify)), JSON.parse);
+    const winnerInfo = {
+        winner: true,
+        cardId: cardId,
+        lineName: `${vResult.lineCount} Line(s)`,
+        winningCells: uniqueWinningCells
+    };
+vResEl.textContent = `WINNER: Card ${cardId} has ${vResult.lineCount} line(s)!`;
+vResEl.style.color = 'var(--accent-green)';
+handleWin(winnerInfo);
+document.getElementById('startGameBtn').disabled = true;
+} else if (vResult.lineCount > 0 && vResult.lineCount < requiredLines) {
+playAudio('notWin');
+vResEl.textContent = `Card ${cardId} has ${vResult.lineCount} of ${requiredLines} required line(s). Not a winner yet.`;
+vResEl.style.color = 'var(--accent-yellow)';
+} else {
+playAudio('notWin');
+vResEl.textContent = `Card ${cardId} is NOT a winner yet.`;
+vResEl.style.color = 'var(--accent-yellow)';
+}
+};
+document.getElementById('mixNumbersBtn').onclick = mixRemainingNumbers;
+document.getElementById('startGameBtn').onclick = startGame;
+document.getElementById('stopGameBtn').onclick = stopGame;
+document.getElementById('quitGameBtn').onclick = quitGame;
+}
+function downloadPlayerCards() {
+const printableArea = document.getElementById('printableArea');
+const cardContainer = document.createElement('div');
+cardContainer.className = 'printable-cards-container';
+for (let i = 1; i <= 150; i++) {
+const cardData = predefinedCards[i];
+if (cardData) {
+const cardElement = createCardElement(i, cardData);
+cardContainer.appendChild(cardElement);
+}
+}
+printableArea.innerHTML = '';
+printableArea.appendChild(cardContainer);
+window.print();
+}
+function renderOwnerPanel() {
+const panel = document.getElementById('ownerSection');
+if (!panel) return;
+if (!isOwnerLoggedIn) {
+panel.innerHTML = `<div class="panel-section-header">Owner Panel</div><button id="ownerLoginPromptBtn" class="bingo-btn bingo-btn-yellow">Owner Login</button>`;
+document.getElementById('ownerLoginPromptBtn').onclick = promptOwnerLogin;
+return;
+}
+const users = getUsers();
+const balances = getData('bingoUserBalances');
+const subscriptions = getSubscriptions();
+let usersHtml = Object.keys(users).length === 0 ? '<div class="p-2 text-muted small">No registered users.</div>' :
+Object.keys(users).map(u => {
+const userSub = subscriptions[u];
+let subHtml = '';
+if (userSub && Date.now() < userSub.expiry) {
+subHtml = `<span class="subscription-badge ${userSub.type}">${userSub.type.charAt(0).toUpperCase() + userSub.type.slice(1)}</span>`;
+}
+return `<div class="user-card"> <div> <strong>${u}</strong><br> <small>Balance: ${(balances[u] || 0).toLocaleString()} ETB</small> ${subHtml} </div> <div class="user-management-controls"> <input type="number" class="form-control" id="balance-adj-${u}" placeholder="+/- Amount" style="margin-bottom:0 !important;"> <button class="btn bingo-btn-green" data-user="${u}" data-action="add-balance" style="margin-bottom:0 !important;">Adjust</button> <button class="btn bingo-btn-red" data-user="${u}" data-action="remove-user" style="margin-bottom:0 !important;">Remove</button> </div> </div>`;
+}).join('');
+panel.innerHTML = ` <div class="owner-panel-header"><h4>Owner Administration</h4><button id="ownerLogoutBtn" class="btn btn-sm btn-danger" style="width:auto; font-size:0.8rem; margin-bottom:0 !important;">Close Panel</button></div> <div class="mb-4"> <label class="form-label">Admin Tools</label> <div class="d-grid gap-2"> <button class="btn bingo-btn-green" id="generateNormalPackageBtn" style="margin-bottom:0;">Generate Normal Package</button> <button class="btn bingo-btn-blue" id="generateDailyPackageBtn" style="margin-bottom:0;">Generate Daily Unlimited</button> <button class="btn bingo-btn-purple" id="generateWeeklyPackageBtn" style="margin-bottom:0;">Generate Weekly Unlimited</button> <button class="btn bingo-btn-yellow" id="downloadCardsBtn" style="margin-bottom:0;">Download All 150 Cards</button> </div> <div id="packageError" class="error-msg mt-2"></div> <label class="form-label mt-3">Generated Code (Copy and send to user):</label> <div id="generatedPackageOutput"></div> </div> <hr> <div class="mb-3"> <label class="form-label">User Management</label> <div id="usersList">${usersHtml}</div> </div>`;
+document.getElementById('downloadCardsBtn').onclick = downloadPlayerCards;
+document.getElementById('generateNormalPackageBtn').onclick = () => { const amountStr = prompt("Enter amount:", "100"); if (amountStr) generatePackage('normal', parseInt(amountStr, 10)); };
+document.getElementById('generateDailyPackageBtn').onclick = () => generatePackage('daily');
+document.getElementById('generateWeeklyPackageBtn').onclick = () => generatePackage('weekly');
+document.getElementById('ownerLogoutBtn').onclick = () => { isOwnerLoggedIn = false; renderOwnerPanel(); };
+panel.querySelector('#usersList').addEventListener('click', (e) => {
+const target = e.target.closest('button');
+if (!target) return;
+const user = target.dataset.user;
+if (!user || !target.dataset.action) return;
+if (target.dataset.action === 'remove-user') {
+if (confirm(`Are you sure you want to permanently remove user: ${user}? This cannot be undone.`)) {
+removeUser(user);
+renderOwnerPanel();
+}
+} else if (target.dataset.action === 'add-balance') {
+const amountInput = document.getElementById(`balance-adj-${user}`);
+const amount = parseFloat(amountInput.value);
+if (!isNaN(amount) && amount !== 0) {
+saveUserBalance(user, getUserBalance(user) + amount);
+renderOwnerPanel();
+} else { alert("Please enter a valid, non-zero number."); }
+}
+});
+}
+function promptOwnerLogin() {
+const modalBody = `<div class="mb-3 text-start"><label class="form-label" for="ownerPasswordInput">Password</label><input type="password" id="ownerPasswordInput" class="form-control" autocomplete="current-password" /></div><div id="ownerErrorMsg" class="error-msg"></div>`;
+const modalFooter = `<button id="ownerLoginBtn" class="btn btn-login">Login</button>`;
+showModal("Owner Authentication", modalBody, modalFooter);
+document.getElementById('ownerPasswordInput').focus();
+document.getElementById('ownerLoginBtn').onclick = () => {
+const pass = document.getElementById('ownerPasswordInput').value;
+const storedHash = getData('ownerPasswordHashStore', `"${DEFAULT_OWNER_PASSWORD_HASH}"`).replace(/"/g, '');
+const inputHash = CryptoJS.SHA256(pass + OWNER_SALT).toString();
+if (inputHash === storedHash) {
+isOwnerLoggedIn = true;
+hideModal();
+renderOwnerPanel();
+} else {
+document.getElementById('ownerErrorMsg').textContent = "Incorrect password.";
+}
+};
+}
+function generatePackage(type, amount = 0) {
+const outputDiv = document.getElementById('generatedPackageOutput');
+const err = document.getElementById('packageError');
+let payload;
+err.textContent = '';
+if (type === 'normal') {
+if (isNaN(amount) || amount <= 0) { err.textContent = "Please enter a valid, positive amount."; outputDiv.textContent = ''; return; }
+payload = { amount: amount, nonce: Date.now() };
+} else {
+const now = Date.now();
+const expiry = (type === 'daily') ? now + (24 * 60 * 60 * 1000) : now + (7 * 24 * 60 * 60 * 1000);
+payload = { type: type, expiry: expiry, nonce: now };
+}
+outputDiv.textContent = CryptoJS.AES.encrypt(JSON.stringify(payload), SECRET_KEY).toString();
+}
+function activatePackage() {
+const input = document.getElementById('packageCodeInput');
+const resultEl = document.getElementById('activationResult');
+const code = input.value.trim();
+if (!code) { resultEl.textContent = 'Please enter a package code.'; resultEl.className = 'error-msg'; return; }
+try {
+const decryptedBytes = CryptoJS.AES.decrypt(code, SECRET_KEY);
+const decryptedPayload = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
+if (!decryptedPayload || !decryptedPayload.nonce) { throw new Error("Invalid package structure."); }
+let usedNonces = getData('usedBingoNonces', '[]');
+if (usedNonces.includes(decryptedPayload.nonce)) { resultEl.textContent = 'Error: This package has already been used.'; resultEl.className = 'error-msg'; return; }
+if (decryptedPayload.amount) {
+gameState.balance += decryptedPayload.amount;
+gameState.visualBalance += decryptedPayload.amount;
+resultEl.textContent = `Success! ${decryptedPayload.amount} ETB was added.`;
+} else if (decryptedPayload.type && decryptedPayload.expiry) {
+const subscriptions = getSubscriptions();
+subscriptions[currentUsername] = { type: decryptedPayload.type, expiry: decryptedPayload.expiry };
+saveSubscriptions(subscriptions);
+resultEl.textContent = `Success! Your Unlimited ${decryptedPayload.type} package is active.`;
+} else {
+throw new Error("Payload missing required data.");
+}
+usedNonces.push(decryptedPayload.nonce);
+saveData('usedBingoNonces', usedNonces);
+resultEl.className = 'success-msg';
+input.value = '';
+updateBalanceAndSubscriptionDisplay();
+} catch (e) {
+console.error("Package activation error:", e);
+resultEl.textContent = 'Invalid or expired package code.';
+resultEl.className = 'error-msg';
+}
+}
+function generateAndRenderAllCards() {
+const container = document.getElementById('outsidePlayersContainer');
+container.innerHTML = '';
+for (let i = 1; i <= 150; i++) {
+const cardData = predefinedCards[i];
+if (cardData) {
+allPlayerCards[i] = cardData;
+const cardElement = createCardElement(i, cardData);
+container.appendChild(cardElement);
+}
+}
+document.getElementById('playerCardCount').textContent = Object.keys(allPlayerCards).length;
+}
+function createCardElement(id, cardData) {
+const cardContainer = document.createElement("div");
+cardContainer.className = "bingo-card-outside";
+cardContainer.id = `player-card-${id}`;
+const header = document.createElement("div");
+header.className = "card-header-info";
+header.innerHTML = `<div class="card-logo">B</div><div style="text-align: left; flex-grow: 1; line-height: 1.1;"><span class="card-title-text">TARIK NICE BINGO</span><div style="font-size: 10px; font-weight: normal; margin-top: 1px;">0960394294</div></div><div class="card-id-barcode-wrapper"><span class="id-label">ID: ${id}</span><div class="barcode-element"></div></div>`;
+cardContainer.appendChild(header);
+const grid = document.createElement('div');
+grid.className = 'bingo-grid';
+"BINGO".split('').forEach(l => { const h = document.createElement("div"); h.className = "header-cell"; h.textContent = l; grid.appendChild(h); });
+for (let r = 0; r < 5; r++) { for (let c = 0; c < 5; c++) { const val = cardData[r][c]; const box = document.createElement("div"); box.className = "number-box"; box.textContent = val; if (val === "FREE") box.classList.add("free-cell"); grid.appendChild(box); } }
+cardContainer.appendChild(grid);
+return cardContainer;
+}
+function renderBoard() { const grid = document.getElementById('boardGrid'); grid.innerHTML = ''; 
+for (let i = 1; i <= 150; i++) { 
+const cell = document.createElement('div'); cell.className = 'board-cell'; cell.textContent = i; if (registeredNumbers.includes(i)) cell.classList.add('selected'); cell.onclick = () => { if(gameState.isPlaying || gameState.isLocked) { alert(gameState.isLocked ? 'Game locked. Check balance or subscription.' : 'Cannot change cards while game is running.'); return; } if (registeredNumbers.includes(i)) { registeredNumbers = registeredNumbers.filter(n => n !== i); } else { registeredNumbers.push(i); } renderBoard(); renderRegisteredCards(); updateWinningAmount(); }; grid.appendChild(cell); } }
+function renderRegisteredCards() { const list = document.getElementById('registeredCardsList'); list.innerHTML = ''; registeredNumbers.sort((a,b) => a-b).forEach(num => { const card = document.createElement('div'); card.className = 'registered-card'; card.textContent = `ID ${num}`; list.appendChild(card); }); }
+function updateCalledNumbersDisplay() {
+const container = document.getElementById('calledNumbersContainer');
+if (container) {
+container.innerHTML = '';
+for (let i = 1; i <= 75; i++) {
+const el = document.createElement('div');
+el.className = 'called-number';
+el.textContent = i;
+if (gameState.calledNumbers.includes(i)) {
+el.classList.add('active');
+}
+container.appendChild(el);
+}
+}
+const lastCalled = gameState.calledNumbers[gameState.calledNumbers.length - 1];
+const currentBallEl = document.querySelector('#currentBallDisplay .value');
+if (currentBallEl) {
+currentBallEl.textContent = lastCalled ? lastCalled : '--';
+}
+const recentlyCalledContainer = document.querySelector('#recentlyCalledDisplay .value');
+if (recentlyCalledContainer) {
+const recentFive = gameState.calledNumbers.slice(-5).reverse();
+if (recentFive.length > 0) {
+recentlyCalledContainer.innerHTML = recentFive.map(n => `<div class="recent-ball">${n}</div>`).join('');
+} else {
+recentlyCalledContainer.innerHTML = `<span class="text-muted small">No calls yet</span>`;
+}
+}
+document.querySelectorAll('.bingo-card-outside .number-box').forEach(box => {
+if (box.classList.contains('free-cell')) {
+box.classList.add('marked');
+return;
+}
+const num = parseInt(box.textContent, 10);
+if (gameState.calledNumbers.includes(num)) {
+box.classList.add('marked');
+}
+});
+}
+function updateWinningAmount() {
+const display = document.getElementById('winningAmountDisplay');
+const p = registeredNumbers.length;
+const b = gameState.currentBetAmount;
+const d = deductionMap[b] || 0;
+if (display) {
+display.innerHTML = `<span class="label">Winning Pot:</span> <span class="value pot">${(p === 0 ? 0 : (p * b) - (p * d)).toLocaleString()} ETB</span>`;
+}
+}
+function lockGame() { gameState.isLocked = true; document.getElementById('startGameBtn').disabled = true; document.getElementById('boardGrid').classList.add('locked'); document.getElementById('gameStateMessage').textContent = 'Insufficient balance for this bet.'; }
+function unlockGame() { gameState.isLocked = false; document.getElementById('startGameBtn').disabled = false; document.getElementById('boardGrid').classList.remove('locked'); document.getElementById('gameStateMessage').textContent = 'Ready to play.'; }
+function updateBalanceAndSubscriptionDisplay() {
+const container = document.getElementById('balanceContainer');
+if (!container) return;
+saveUserBalance(currentUsername, gameState.balance); // Always save the REAL balance
+const userSub = getSubscriptions()[currentUsername];
+let subInfoHtml = '';
+let displayBalance = gameState.visualBalance; // Default to showing the "fake" balance
+
+if (userSub && Date.now() < userSub.expiry) {
+    const expiryDate = new Date(userSub.expiry);
+    subInfoHtml = `<div style="font-size:0.9rem; color:var(--accent-yellow)">Unlimited ${userSub.type} active until ${expiryDate.toLocaleString()}</div>`;
+    const timeLeft = userSub.expiry - Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (timeLeft > 0 && timeLeft < oneDay) {
+        subInfoHtml += `<div style="font-size:0.9rem; color:var(--accent-red); font-weight: bold;">Warning: Your package will expire in less than 24 hours.</div>`;
+    }
+} else {
+    const criticalBalanceThreshold = 80;
+    const lowBalanceWarningThreshold = 160;
+
+    if (gameState.balance <= criticalBalanceThreshold) {
+        displayBalance = gameState.balance;
+        subInfoHtml = `<div style="font-size:0.9rem; color:var(--accent-red); font-weight: bold;">Warning: Low Balance! Please recharge again to continue playing.</div>`;
+    } else if (gameState.balance < lowBalanceWarningThreshold) {
+        subInfoHtml = `<div style="font-size:0.9rem; color:var(--accent-yellow); font-weight: bold;">Your package is running low. Consider recharging soon.</div>`;
+    }
+}
+
+container.innerHTML = `<div class="label">Your Balance: <span class="value">${displayBalance.toLocaleString()} ETB</span> </div> ${subInfoHtml}`;
+checkGameAccess();
+}
+function checkGameAccess() {
+if (gameState.isPlaying) return;
+if (hasActiveSubscription(currentUsername)) {
+unlockGame();
+if (document.getElementById('gameStateMessage')) {
+document.getElementById('gameStateMessage').textContent = "Unlimited package active. Ready to play!";
+}
+} else {
+const costToPlay = 80;
+if (gameState.balance < costToPlay) {
+lockGame();
+} else {
+unlockGame();
+}
+}
+}
+function mixRemainingNumbers() {
+const wasPlaying = gameState.isPlaying;
+if (wasPlaying) { clearTimeout(gameState.nextCallTimeoutId); if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio.onended = null; } }
+for (const letter in gameState.numberPool) {
+if (gameState.numberPool[letter] && gameState.numberPool[letter].length > 0) {
+gameState.numberPool[letter].sort(() => Math.random() - 0.5);
+}
+}
+if (gameState.letterCycle && gameState.letterCycle.length > 0) {
+gameState.letterCycle.sort(() => Math.random() - 0.5);
+}
+gameState.letterCycleIndex = 0;
+const messageEl = document.getElementById('gameStateMessage');
+if (messageEl) messageEl.textContent = 'Re-shuffling numbers...';
+playAudio('mixing', () => {
+if (wasPlaying) {
+if (messageEl) messageEl.textContent = 'Calling numbers...';
+gameCycle();
+} else {
+if (messageEl) messageEl.textContent = 'Number pool has been re-shuffled.';
+}
+});
+}
+renderLoginForm();
+});
+</script>
+
+<!-- Service Worker Registration Script -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker: Registered successfully', reg.scope))
+        .catch(err => console.log('Service Worker: Registration failed', err));
+    });
+  }
+</script>
+
+</body>
+</html>

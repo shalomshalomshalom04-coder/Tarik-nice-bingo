@@ -1,0 +1,64 @@
+const CACHE_NAME = 'bingo-game-cache-v2'; // Note: I changed v1 to v2
+
+// These are the core files needed for your app to start
+const coreAssets = [
+  '/', // This caches the root of your site
+  'index.html',
+  'manifest.json',
+  'icons/icon-192x192.png',
+  'icons/icon-512x512.png',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js',
+  'https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js',
+  // Add critical audio files here for better offline experience
+  'https://res.cloudinary.com/djzspwc4d/video/upload/v1757696252/well_come_npljjx.mp3',
+  'https://res.cloudinary.com/djzspwc4d/video/upload/v1757696249/starting_audio_ameiat.mp3',
+  'https://res.cloudinary.com/djzspwc4d/video/upload/v1757696251/caller_numbers_mixing_audio_MP3_pntjqi.mp3'
+];
+
+// 1. Install the service worker and cache the core assets
+self.addEventListener('install', e => {
+  console.log('Service Worker: Installing...');
+  e.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Service Worker: Caching core assets');
+        return cache.addAll(coreAssets);
+      })
+      .catch(err => console.error('Failed to cache core assets:', err))
+  );
+  self.skipWaiting();
+});
+
+// 2. Activate the service worker and clean up old caches
+self.addEventListener('activate', e => {
+  console.log('Service Worker: Activating...');
+  e.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            console.log('Service Worker: Clearing old cache:', cache);
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+});
+
+// 3. Intercept network requests (Fetch event)
+self.addEventListener('fetch', e => {
+  console.log('Service Worker: Fetching', e.request.url);
+  e.respondWith(
+    caches.match(e.request)
+      .then(cachedResponse => {
+        // If the resource is in the cache, return it.
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Otherwise, fetch it from the network.
+        return fetch(e.request);
+      })
+  );
+});
